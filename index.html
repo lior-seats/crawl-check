@@ -8,7 +8,9 @@
   <meta property="og:title" content="AI Crawler Check — Is Your Site Blocking AI Bots?" />
   <meta property="og:description" content="Free tool: see which AI crawlers (GPTBot, ClaudeBot, MetaAI) are allowed or blocked on your site in seconds." />
   <meta property="og:url" content="https://lior-seats.github.io/crawl-check/" />
+  <meta property="og:image" content="https://lior-seats.github.io/crawl-check/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://lior-seats.github.io/crawl-check/og-image.png" />
   <link rel="canonical" href="https://lior-seats.github.io/crawl-check/" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,6 +54,19 @@
     .cta-banner p { font-size: 0.88rem; color: #aab; margin-bottom: 18px; line-height: 1.5; }
     .cta-btn { display: inline-block; background: #e94560; color: #fff; border-radius: 8px; padding: 11px 28px; font-weight: 700; font-size: 0.95rem; text-decoration: none; }
     .cta-btn:hover { background: #c73650; }
+    .waitlist-form { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
+    .waitlist-form input[type="email"] { flex: 1; min-width: 200px; padding: 11px 14px; border: 1px solid #444; border-radius: 8px; background: #111; color: #e8e8e8; font-size: 0.9rem; outline: none; }
+    .waitlist-form input[type="email"]:focus { border-color: #e94560; }
+    .waitlist-form input::placeholder { color: #666; }
+    .waitlist-form button { padding: 11px 22px; background: #e94560; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .waitlist-form button:hover { background: #c73650; }
+    .waitlist-form button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .waitlist-thanks { color: #10b981; font-weight: 600; font-size: 0.95rem; margin-top: 8px; }
+    .cta-sub { font-size: 0.78rem; color: #666; margin-top: 12px; }
+    .cta-sub a { color: #e94560; text-decoration: none; }
+    .cta-bullets { list-style: none; text-align: left; max-width: 360px; margin: 0 auto 18px; }
+    .cta-bullets li { font-size: 0.85rem; color: #aab; padding: 3px 0; }
+    .cta-bullets li::before { content: '→ '; color: #e94560; font-weight: 700; }
     .error-msg { color: #ef4444; font-size: 0.88rem; margin-top: 12px; }
     .loading { color: #888; font-size: 0.88rem; margin-top: 12px; }
     .section { max-width: 680px; margin: 40px auto; padding: 0 24px; }
@@ -215,14 +230,26 @@ function renderResults(robotsTxt) {
     <div class="summary-stat"><div class="num">${CRAWLERS.length}</div><div class="label">Crawlers checked</div></div>
   </div>`;
 
+  const ctaForm = `
+    <form class="waitlist-form" onsubmit="submitWaitlist(event, this)">
+      <input type="email" name="email" placeholder="your@email.com" required />
+      <button type="submit">Get early access →</button>
+    </form>
+    <div class="waitlist-thanks" style="display:none">✓ You're on the list — we'll be in touch!</div>
+    <p class="cta-sub"><a href="https://lior-seats.github.io/crawlguard-waitlist/" target="_blank">See what CrawlGuard does →</a></p>`;
+
   const cta = allowed > 0 ? `<div class="cta-banner">
-    <h3>⚠️ ${allowed} AI crawler${allowed > 1 ? 's are' : ' is'} allowed through</h3>
-    <p>robots.txt is a best-effort signal. CrawlGuard monitors actual crawler traffic in real-time, shows cost-per-bot attribution, and alerts you <em>before</em> your bill spikes — not after.</p>
-    <a href="https://lior-seats.github.io/crawlguard-waitlist/" class="cta-btn" target="_blank">Join CrawlGuard waitlist →</a>
+    <h3>⚠️ ${allowed} AI crawler${allowed > 1 ? 's are' : ' is'} allowed through — know when they hit</h3>
+    <ul class="cta-bullets">
+      <li>Real-time alerts when a crawler spikes your bill</li>
+      <li>Per-bot cost attribution (not just aggregate traffic)</li>
+      <li>One-click rate limiting at the infrastructure level</li>
+    </ul>
+    ${ctaForm}
   </div>` : `<div class="cta-banner">
     <h3>✓ You're blocking the major AI crawlers</h3>
-    <p>Good robots.txt setup. But crawlers can ignore it. CrawlGuard monitors actual traffic and alerts you when a bot is hitting your infrastructure despite being blocked.</p>
-    <a href="https://lior-seats.github.io/crawlguard-waitlist/" class="cta-btn" target="_blank">Monitor real traffic with CrawlGuard →</a>
+    <p style="margin-bottom:16px">Good setup. But crawlers can ignore robots.txt. CrawlGuard monitors actual traffic and alerts you when a bot is hitting your infrastructure despite being blocked — before the invoice arrives.</p>
+    ${ctaForm}
   </div>`;
 
   document.getElementById('results').innerHTML = `
@@ -235,6 +262,32 @@ function analyzeFromPaste() {
   const txt = document.getElementById('robots-input').value.trim();
   if (!txt) { alert('Please paste your robots.txt content.'); return; }
   renderResults(txt);
+}
+
+async function submitWaitlist(e, form) {
+  e.preventDefault();
+  var btn = form.querySelector('button');
+  var email = form.querySelector('input[type="email"]').value.trim();
+  btn.textContent = 'Joining…';
+  btn.disabled = true;
+  try {
+    var res = await fetch('https://agent-control-plane-w3m9.onrender.com/api/waitlist', {
+      method: 'POST',
+      body: JSON.stringify({ email: email, source: 'crawlcheck' }),
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      form.style.display = 'none';
+      var thanks = form.nextElementSibling;
+      if (thanks) thanks.style.display = 'block';
+    } else {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    btn.textContent = 'Try again';
+    btn.disabled = false;
+  }
 }
 
 async function analyzeFromUrl() {
