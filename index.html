@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Crawler Check — Is Your Site Blocking AI Bots?</title>
+  <meta name="description" content="Free tool: paste your URL or robots.txt and see exactly which AI crawlers (GPTBot, ClaudeBot, MetaAI, PerplexityBot) can access your site — and which are blocked." />
+  <meta property="og:title" content="AI Crawler Check — Is Your Site Blocking AI Bots?" />
+  <meta property="og:description" content="Free tool: see which AI crawlers (GPTBot, ClaudeBot, MetaAI) are allowed or blocked on your site in seconds." />
+  <meta property="og:url" content="https://lior-seats.github.io/crawl-check/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://lior-seats.github.io/crawl-check/" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+    .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 60px 24px 48px; text-align: center; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 16px; line-height: 1.2; }
+    .hero h1 span { color: #e94560; }
+    .hero p { font-size: 1.1rem; color: #aab; max-width: 540px; margin: 0 auto 32px; line-height: 1.6; }
+    .badge { display: inline-block; background: rgba(233,69,96,0.15); border: 1px solid rgba(233,69,96,0.4); color: #e94560; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 20px; }
+    .tool-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 32px; max-width: 680px; margin: 0 auto; }
+    .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid #2a2a2a; }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: #888; border-bottom: 2px solid transparent; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; }
+    .tab.active { color: #e94560; border-bottom-color: #e94560; }
+    .tab:hover { color: #e8e8e8; }
+    textarea { width: 100%; height: 180px; background: #111; border: 1px solid #333; border-radius: 10px; color: #e8e8e8; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; padding: 14px; resize: vertical; outline: none; line-height: 1.6; }
+    textarea:focus { border-color: #e94560; }
+    input[type="url"] { width: 100%; background: #111; border: 1px solid #333; border-radius: 10px; color: #e8e8e8; font-size: 0.95rem; padding: 12px 16px; outline: none; }
+    input[type="url"]:focus { border-color: #e94560; }
+    .hint { font-size: 0.78rem; color: #666; margin-top: 8px; }
+    .btn { display: block; width: 100%; background: #e94560; color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 18px; transition: background 0.2s; }
+    .btn:hover { background: #c73650; }
+    .btn:disabled { background: #444; cursor: not-allowed; }
+    .results { margin-top: 28px; }
+    .results-title { font-size: 0.85rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+    .crawler-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; border: 1px solid transparent; }
+    .crawler-row.blocked { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); }
+    .crawler-row.allowed { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+    .crawler-name { font-weight: 600; font-size: 0.9rem; }
+    .crawler-company { font-size: 0.78rem; color: #888; margin-top: 2px; }
+    .status-badge { font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .status-badge.blocked { background: rgba(16,185,129,0.2); color: #10b981; }
+    .status-badge.allowed { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .summary { background: #111; border-radius: 12px; padding: 18px; margin-bottom: 20px; display: flex; gap: 24px; }
+    .summary-stat { text-align: center; }
+    .summary-stat .num { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .summary-stat .num.red { color: #ef4444; }
+    .summary-stat .num.green { color: #10b981; }
+    .summary-stat .label { font-size: 0.78rem; color: #888; margin-top: 4px; }
+    .cta-banner { margin-top: 28px; background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid rgba(233,69,96,0.3); border-radius: 14px; padding: 24px; text-align: center; }
+    .cta-banner h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .cta-banner p { font-size: 0.88rem; color: #aab; margin-bottom: 18px; line-height: 1.5; }
+    .cta-btn { display: inline-block; background: #e94560; color: #fff; border-radius: 8px; padding: 11px 28px; font-weight: 700; font-size: 0.95rem; text-decoration: none; }
+    .cta-btn:hover { background: #c73650; }
+    .error-msg { color: #ef4444; font-size: 0.88rem; margin-top: 12px; }
+    .loading { color: #888; font-size: 0.88rem; margin-top: 12px; }
+    .section { max-width: 680px; margin: 40px auto; padding: 0 24px; }
+    .faq h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; }
+    .faq-item { margin-bottom: 20px; }
+    .faq-item h3 { font-size: 0.95rem; font-weight: 600; color: #ddd; margin-bottom: 6px; }
+    .faq-item p { font-size: 0.88rem; color: #999; line-height: 1.6; }
+    footer { text-align: center; padding: 32px 24px; color: #555; font-size: 0.82rem; border-top: 1px solid #1a1a1a; }
+    footer a { color: #e94560; text-decoration: none; }
+    #paste-panel { display: block; }
+    #url-panel { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="badge">FREE TOOL</span>
+  <h1>Is your site <span>blocking AI crawlers?</span></h1>
+  <p>Paste your URL or robots.txt and see exactly which AI bots can access your infrastructure — and which are stopped cold.</p>
+</div>
+
+<div class="section" style="padding-top:0; margin-top:-20px;">
+  <div class="tool-card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('paste')">Paste robots.txt</button>
+      <button class="tab" onclick="switchTab('url')" id="url-tab">Fetch by URL</button>
+    </div>
+
+    <div id="paste-panel">
+      <textarea id="robots-input" placeholder="Paste your robots.txt here...&#10;&#10;Example:&#10;User-agent: GPTBot&#10;Disallow: /&#10;&#10;User-agent: *&#10;Allow: /"></textarea>
+      <p class="hint">Find your robots.txt at: https://yourdomain.com/robots.txt</p>
+      <button class="btn" onclick="analyzeFromPaste()">Check My Crawler Permissions →</button>
+    </div>
+
+    <div id="url-panel">
+      <input type="url" id="url-input" placeholder="https://yourdomain.com" />
+      <p class="hint">We'll fetch robots.txt from https://yourdomain.com/robots.txt via a public CORS proxy.</p>
+      <button class="btn" onclick="analyzeFromUrl()">Fetch &amp; Check →</button>
+      <p id="fetch-status" class="loading" style="display:none">Fetching robots.txt…</p>
+      <p id="fetch-error" class="error-msg" style="display:none"></p>
+    </div>
+
+    <div id="results" class="results" style="display:none"></div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="section faq">
+  <h2>Common questions</h2>
+  <div class="faq-item">
+    <h3>Why do AI crawlers spike infrastructure costs?</h3>
+    <p>Unlike Googlebot (which respects crawl delays and caches well), AI training crawlers often make rapid parallel requests, bypass CDN caches, and hit database-backed pages. A single MetaExternalAgent burst has been reported to cause 5–10× temporary traffic spikes with no warning.</p>
+  </div>
+  <div class="faq-item">
+    <h3>Does blocking AI crawlers in robots.txt actually stop them?</h3>
+    <p>Major crawlers like GPTBot (OpenAI) and ClaudeBot (Anthropic) officially claim to respect robots.txt. Enforcement varies — this is a best-effort signal, not a firewall rule. Rate-limiting at the infrastructure level (Cloudflare, nginx) provides stronger guarantees.</p>
+  </div>
+  <div class="faq-item">
+    <h3>Which AI crawlers are most likely to spike my bill?</h3>
+    <p>Reports in 2025–2026 most commonly cite Meta-ExternalAgent, GPTBot, Bytespider (ByteDance), and CCBot (Common Crawl). Newer LLM services have also started operating undisclosed crawlers. See the <a href="https://github.com/lior-seats/ai-crawler-block-list" target="_blank">full user agent reference →</a></p>
+  </div>
+  <div class="faq-item">
+    <h3>I'm already blocking them in robots.txt. Am I fully protected?</h3>
+    <p>Not necessarily. robots.txt only works for crawlers that choose to honor it. For cost protection, you also want real-time monitoring to know <em>when</em> a crawler is hitting your site and how much it's actually costing — so you can respond before the invoice arrives.</p>
+  </div>
+</div>
+
+<footer>
+  Built by <a href="https://lior-seats.github.io/crawlguard-waitlist/" target="_blank">CrawlGuard</a> · 
+  <a href="https://github.com/lior-seats/ai-crawler-block-list" target="_blank">AI crawler reference on GitHub</a> · 
+  Free forever
+</footer>
+
+<script>
+const CRAWLERS = [
+  { name: 'GPTBot', company: 'OpenAI', agents: ['gptbot'] },
+  { name: 'ChatGPT-User', company: 'OpenAI', agents: ['chatgpt-user'] },
+  { name: 'ClaudeBot', company: 'Anthropic', agents: ['claudebot', 'claude-web'] },
+  { name: 'Meta-ExternalAgent', company: 'Meta', agents: ['meta-externalagent'] },
+  { name: 'PerplexityBot', company: 'Perplexity', agents: ['perplexitybot'] },
+  { name: 'Applebot-Extended', company: 'Apple', agents: ['applebot-extended'] },
+  { name: 'Googlebot-Extended', company: 'Google', agents: ['googlebot-extended'] },
+  { name: 'Bytespider', company: 'ByteDance', agents: ['bytespider'] },
+  { name: 'CCBot', company: 'Common Crawl', agents: ['ccbot'] },
+  { name: 'cohere-ai', company: 'Cohere', agents: ['cohere-ai'] },
+  { name: 'Amazonbot', company: 'Amazon', agents: ['amazonbot'] },
+  { name: 'DiffBot', company: 'Diffbot', agents: ['diffbot'] },
+];
+
+function switchTab(tab) {
+  document.getElementById('paste-panel').style.display = tab === 'paste' ? 'block' : 'none';
+  document.getElementById('url-panel').style.display = tab === 'url' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (tab === 'paste' && i === 0) || (tab === 'url' && i === 1)));
+  document.getElementById('results').style.display = 'none';
+}
+
+function parseRobotsTxt(text) {
+  const lines = text.split('\n').map(l => l.replace(/#.*$/, '').trim()).filter(Boolean);
+  const rules = {};
+  let currentAgents = [];
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (lower.startsWith('user-agent:')) {
+      const agent = line.split(':').slice(1).join(':').trim().toLowerCase();
+      currentAgents.push(agent);
+    } else if (lower.startsWith('disallow:') || lower.startsWith('allow:')) {
+      const isDisallow = lower.startsWith('disallow:');
+      const path = line.split(':').slice(1).join(':').trim();
+      for (const agent of currentAgents) {
+        if (!rules[agent]) rules[agent] = [];
+        rules[agent].push({ disallow: isDisallow, path });
+      }
+      currentAgents = [];
+    } else {
+      currentAgents = [];
+    }
+  }
+  return rules;
+}
+
+function isBlocked(rules, agentVariants) {
+  for (const variant of agentVariants) {
+    if (rules[variant]) {
+      const r = rules[variant];
+      const hasDisallowAll = r.some(x => x.disallow && (x.path === '/' || x.path === ''));
+      if (hasDisallowAll) return true;
+    }
+  }
+  if (rules['*']) {
+    const r = rules['*'];
+    const hasDisallowAll = r.some(x => x.disallow && (x.path === '/' || x.path === ''));
+    if (hasDisallowAll) {
+      // check if any variant has explicit Allow: /
+      for (const variant of agentVariants) {
+        if (rules[variant] && rules[variant].some(x => !x.disallow && (x.path === '/' || x.path === ''))) return false;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+function renderResults(robotsTxt) {
+  const rules = parseRobotsTxt(robotsTxt);
+  let blocked = 0, allowed = 0;
+  const rows = CRAWLERS.map(c => {
+    const b = isBlocked(rules, c.agents);
+    if (b) blocked++; else allowed++;
+    return `<div class="crawler-row ${b ? 'blocked' : 'allowed'}">
+      <div>
+        <div class="crawler-name">${c.name}</div>
+        <div class="crawler-company">${c.company}</div>
+      </div>
+      <span class="status-badge ${b ? 'blocked' : 'allowed'}">${b ? '✓ BLOCKED' : '⚠ ALLOWED'}</span>
+    </div>`;
+  }).join('');
+
+  const summary = `<div class="summary">
+    <div class="summary-stat"><div class="num green">${blocked}</div><div class="label">Blocked</div></div>
+    <div class="summary-stat"><div class="num red">${allowed}</div><div class="label">Allowed through</div></div>
+    <div class="summary-stat"><div class="num">${CRAWLERS.length}</div><div class="label">Crawlers checked</div></div>
+  </div>`;
+
+  const cta = allowed > 0 ? `<div class="cta-banner">
+    <h3>⚠️ ${allowed} AI crawler${allowed > 1 ? 's are' : ' is'} allowed through</h3>
+    <p>robots.txt is a best-effort signal. CrawlGuard monitors actual crawler traffic in real-time, shows cost-per-bot attribution, and alerts you <em>before</em> your bill spikes — not after.</p>
+    <a href="https://lior-seats.github.io/crawlguard-waitlist/" class="cta-btn" target="_blank">Join CrawlGuard waitlist →</a>
+  </div>` : `<div class="cta-banner">
+    <h3>✓ You're blocking the major AI crawlers</h3>
+    <p>Good robots.txt setup. But crawlers can ignore it. CrawlGuard monitors actual traffic and alerts you when a bot is hitting your infrastructure despite being blocked.</p>
+    <a href="https://lior-seats.github.io/crawlguard-waitlist/" class="cta-btn" target="_blank">Monitor real traffic with CrawlGuard →</a>
+  </div>`;
+
+  document.getElementById('results').innerHTML = `
+    <div class="results-title">Results — ${CRAWLERS.length} AI crawlers checked</div>
+    ${summary}${rows}${cta}`;
+  document.getElementById('results').style.display = 'block';
+}
+
+function analyzeFromPaste() {
+  const txt = document.getElementById('robots-input').value.trim();
+  if (!txt) { alert('Please paste your robots.txt content.'); return; }
+  renderResults(txt);
+}
+
+async function analyzeFromUrl() {
+  const rawUrl = document.getElementById('url-input').value.trim();
+  if (!rawUrl) { alert('Please enter a URL.'); return; }
+  let base = rawUrl.replace(/\/$/, '');
+  if (!base.startsWith('http')) base = 'https://' + base;
+  const robotsUrl = base + '/robots.txt';
+  const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(robotsUrl);
+  document.getElementById('fetch-status').style.display = 'block';
+  document.getElementById('fetch-error').style.display = 'none';
+  try {
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+    document.getElementById('fetch-status').style.display = 'none';
+    if (!data.contents) throw new Error('Empty response');
+    renderResults(data.contents);
+  } catch (e) {
+    document.getElementById('fetch-status').style.display = 'none';
+    document.getElementById('fetch-error').style.display = 'block';
+    document.getElementById('fetch-error').textContent = 'Could not fetch robots.txt. Try the "Paste" tab instead.';
+  }
+}
+</script>
+</body>
+</html>
