@@ -109,6 +109,23 @@
       <p id="fetch-error" class="error-msg" style="display:none"></p>
     </div>
 
+    <div id="above-fold-cta" class="cta-banner" style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:20px 24px;margin:24px 0;max-width:640px;">
+      <h3 style="margin:0 0 8px 0;font-size:1.1rem;color:#1e1b4b;">Want real-time AI crawler cost alerts?</h3>
+      <ul style="margin:8px 0 16px 0;padding-left:20px;color:#374151;font-size:0.95rem;">
+        <li>Per-bot cost attribution (GPTBot, ClaudeBot, meta-externalagent…)</li>
+        <li>Instant alerts when a crawler spikes your bill</li>
+        <li>One-click rate-limit rules — no Nginx config required</li>
+      </ul>
+      <form action="https://agent-control-plane-w3m9.onrender.com/api/waitlist" method="post" onsubmit="handleCTA(event, this)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="email" name="email" placeholder="you@example.com" required style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem;">
+          <input type="hidden" name="source" value="crawlcheck">
+          <button type="submit" style="background:#4f46e5;color:white;padding:8px 18px;border:none;border-radius:6px;font-size:0.95rem;cursor:pointer;white-space:nowrap;">Join CrawlGuard waitlist →</button>
+        </div>
+        <div class="cta-msg" style="margin-top:8px;font-size:0.85rem;color:#6b7280;display:none;"></div>
+      </form>
+    </div>
+
     <div id="results" class="results" style="display:none"></div>
   </div>
 </div>
@@ -288,6 +305,27 @@ async function submitWaitlist(e, form) {
     btn.textContent = 'Try again';
     btn.disabled = false;
   }
+}
+
+function handleCTA(e, form) {
+  e.preventDefault();
+  const data = { email: form.email.value, source: 'crawlcheck' };
+  fetch('https://agent-control-plane-w3m9.onrender.com/api/waitlist', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  }).then(r => r.json()).then(d => {
+    const msg = form.querySelector('.cta-msg');
+    msg.style.display = 'block';
+    msg.style.color = '#059669';
+    msg.textContent = d.ok ? '✓ You\'re on the waitlist!' : 'Something went wrong. Try again.';
+    if (d.ok) { form.querySelector('button').disabled = true; }
+  }).catch(() => {
+    const msg = form.querySelector('.cta-msg');
+    msg.style.display = 'block';
+    msg.style.color = '#dc2626';
+    msg.textContent = 'Something went wrong. Try again.';
+  });
 }
 
 async function analyzeFromUrl() {
