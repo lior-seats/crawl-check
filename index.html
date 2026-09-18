@@ -64,6 +64,14 @@
     .waitlist-thanks { color: #10b981; font-weight: 600; font-size: 0.95rem; margin-top: 8px; }
     .cta-sub { font-size: 0.78rem; color: #666; margin-top: 12px; }
     .cta-sub a { color: #e94560; text-decoration: none; }
+    .share-row { display: flex; gap: 10px; justify-content: center; margin: 22px 0 4px; flex-wrap: wrap; }
+    .share-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+    .share-btn.twitter { background: #000; color: #fff; }
+    .share-btn.twitter:hover { background: #333; }
+    .share-btn.copy { background: #1e1e2e; border: 1px solid #333; color: #ccc; }
+    .share-btn.copy:hover { background: #2a2a3e; color: #fff; }
+    .share-btn.copy.copied { border-color: #10b981; color: #10b981; }
+    .demo-notice { background: rgba(233,69,96,0.08); border: 1px solid rgba(233,69,96,0.25); border-radius: 8px; padding: 9px 14px; font-size: 0.8rem; color: #e94560; margin-bottom: 16px; text-align: center; }
     .cta-bullets { list-style: none; text-align: left; max-width: 360px; margin: 0 auto 18px; }
     .cta-bullets li { font-size: 0.85rem; color: #aab; padding: 3px 0; }
     .cta-bullets li::before { content: '→ '; color: #e94560; font-weight: 700; }
@@ -78,6 +86,7 @@
     footer a { color: #e94560; text-decoration: none; }
     #paste-panel { display: block; }
     #url-panel { display: none; }
+    .demo-label { display: inline-block; background: rgba(233,69,96,0.12); color: #e94560; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.04em; }
   </style>
 </head>
 <body>
@@ -226,12 +235,14 @@ function isBlocked(rules, agentVariants) {
   return false;
 }
 
-function renderResults(robotsTxt) {
+function renderResults(robotsTxt, domain) {
+  domain = domain || '';
   const rules = parseRobotsTxt(robotsTxt);
   let blocked = 0, allowed = 0;
+  const allowedNames = [];
   const rows = CRAWLERS.map(c => {
     const b = isBlocked(rules, c.agents);
-    if (b) blocked++; else allowed++;
+    if (b) blocked++; else { allowed++; allowedNames.push(c.name); }
     return `<div class="crawler-row ${b ? 'blocked' : 'allowed'}">
       <div>
         <div class="crawler-name">${c.name}</div>
@@ -269,16 +280,68 @@ function renderResults(robotsTxt) {
     ${ctaForm}
   </div>`;
 
+  // Build share text
+  const domainLabel = domain ? domain.replace(/https?:\/\//, '').replace(/\/$/, '') : 'your site';
+  const shareSummary = allowed === 0
+    ? `✅ ${domainLabel} blocks all ${CRAWLERS.length} major AI crawlers in robots.txt.`
+    : `⚠️ ${allowed} of ${CRAWLERS.length} AI crawlers have access to ${domainLabel} — including ${allowedNames.slice(0,2).join(' and ')}${allowedNames.length > 2 ? ` and ${allowedNames.length-2} more` : ''}.`;
+  const tweetText = `${shareSummary}\n\nCheck yours free: https://lior-seats.github.io/crawl-check/\nWant per-bot cost alerts? https://lior-seats.github.io/crawlguard-waitlist/`;
+  window._shareData = { summary: shareSummary + '\n\nCheck yours: https://lior-seats.github.io/crawl-check/', tweet: tweetText };
+
+  const shareRow = `<div class="share-row">
+    <a class="share-btn twitter" href="#" onclick="shareOnTwitter();return false;" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M8.93 6.588L14.47 0h-1.316L8.33 5.713 4.29 0H0l5.822 8.476L0 15h1.316l5.09-5.91L10.71 15H15L8.93 6.588zm-1.803 2.09l-.59-.843L1.785.9h2.02l3.788 5.415.59.843 4.923 7.042h-2.02L7.128 8.678z"/></svg>
+      Share on X
+    </a>
+    <button class="share-btn copy" onclick="copyResult(this)">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 10V2.5A1.5 1.5 0 012.5 1H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Copy summary
+    </button>
+  </div>`;
+
   document.getElementById('results').innerHTML = `
     <div class="results-title">Results — ${CRAWLERS.length} AI crawlers checked</div>
-    ${summary}${rows}${cta}`;
+    ${summary}${rows}${shareRow}${cta}`;
   document.getElementById('results').style.display = 'block';
+
+  // Hide above-fold CTA once results shown
+  var afc = document.getElementById('above-fold-cta');
+  if (afc) afc.style.display = 'none';
+}
+
+function shareOnTwitter() {
+  if (!window._shareData) return;
+  var url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(window._shareData.tweet);
+  window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400');
+}
+
+function copyResult(btn) {
+  if (!window._shareData) return;
+  navigator.clipboard.writeText(window._shareData.summary).then(function() {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 10V2.5A1.5 1.5 0 012.5 1H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> Copy summary';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(function() {
+    // fallback for older browsers
+    var ta = document.createElement('textarea');
+    ta.value = window._shareData.summary;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy summary'; btn.classList.remove('copied'); }, 2000);
+  });
 }
 
 function analyzeFromPaste() {
   const txt = document.getElementById('robots-input').value.trim();
   if (!txt) { alert('Please paste your robots.txt content.'); return; }
-  renderResults(txt);
+  renderResults(txt, '');
 }
 
 async function submitWaitlist(e, form) {
@@ -342,13 +405,27 @@ async function analyzeFromUrl() {
     const data = await res.json();
     document.getElementById('fetch-status').style.display = 'none';
     if (!data.contents) throw new Error('Empty response');
-    renderResults(data.contents);
+    renderResults(data.contents, base);
   } catch (e) {
     document.getElementById('fetch-status').style.display = 'none';
     document.getElementById('fetch-error').style.display = 'block';
     document.getElementById('fetch-error').textContent = 'Could not fetch robots.txt. Try the "Paste" tab instead.';
   }
 }
+// Show demo result on page load so HN visitors immediately see what the tool does
+(function showDemo() {
+  var demoRobots = '# No robots.txt — all crawlers allowed';
+  var resultsDiv = document.getElementById('results');
+  var origHtml = resultsDiv.innerHTML;
+  renderResults(demoRobots, 'example.com');
+  // Add a demo notice at the top of results
+  resultsDiv.insertAdjacentHTML('afterbegin',
+    '<div class="demo-notice">Demo — this is example.com\'s result (no robots.txt). Enter your own URL or paste your robots.txt above to check your site.</div>'
+  );
+  // Mark the results title as demo
+  var title = resultsDiv.querySelector('.results-title');
+  if (title) title.innerHTML = 'Results — 12 AI crawlers checked <span class="demo-label">DEMO</span>';
+})();
 </script>
 </body>
 </html>
