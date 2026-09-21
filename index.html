@@ -308,6 +308,7 @@ function renderResults(robotsTxt, domain, isDemo) {
     ${summary}${rows}${cta}`;
   document.getElementById('results').style.display = 'block';
   document.getElementById('share-section').style.display = 'flex';
+  document.getElementById('pro-upgrade-card').style.display = 'block';
 }
 
 function analyzeFromPaste() {
@@ -456,8 +457,79 @@ function initDemo() {
 
 initDemo();
 
+// ─── CrawlGuard Pro checkout ───────────────────────────────────────────────
+const CHECKOUT_URL = 'https://agent-control-plane-w3m9.onrender.com/api/checkout/create-session';
+
+async function startProCheckout() {
+  const btn = document.getElementById('pro-checkout-btn');
+  if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
+  try {
+    const res = await fetch(CHECKOUT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (data.ok && data.url) {
+      window.location.href = data.url;
+    } else {
+      // Payments not yet live — graceful fallback to waitlist
+      const modal = document.getElementById('pro-soon-modal');
+      if (modal) modal.style.display = 'flex';
+      if (btn) { btn.textContent = 'Upgrade to Pro $29/mo'; btn.disabled = false; }
+    }
+  } catch(e) {
+    const modal = document.getElementById('pro-soon-modal');
+    if (modal) modal.style.display = 'flex';
+    if (btn) { btn.textContent = 'Upgrade to Pro $29/mo'; btn.disabled = false; }
+  }
+}
+
+// Show ?pro=true success banner
+(function(){
+  if (window.location.search.includes('pro=true')) {
+    const banner = document.getElementById('pro-success-banner');
+    if (banner) {
+      banner.style.display = 'block';
+      setTimeout(function() {
+        banner.style.opacity = '0';
+        setTimeout(function() { banner.style.display = 'none'; }, 600);
+      }, 5000);
+    }
+  }
+})();
+
 // Page hit counter — fire and forget
 (function(){try{fetch('https://agent-control-plane-w3m9.onrender.com/api/hit?page=crawl-check',{mode:'no-cors'}).catch(function(){});}catch(e){}})();
 </script>
+
+<!-- CrawlGuard Pro upgrade card (shown after results) -->
+<div id="pro-upgrade-card" style="display:none;max-width:680px;margin:0 auto 2rem;background:linear-gradient(135deg,#0a1628,#0f1f3d);border:1px solid #e94560;border-radius:12px;padding:1.5rem 1.75rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div style="font-size:0.78rem;font-weight:700;color:#e94560;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem">CrawlGuard Pro</div>
+      <div style="font-size:1.05rem;font-weight:700;color:#f9fafb;margin-bottom:0.25rem">Real-time bot monitoring + cost attribution</div>
+      <div style="font-size:0.85rem;color:#9ca3af">See which AI crawlers are hitting your infrastructure and what they're costing you — live from your Vercel log drain.</div>
+    </div>
+    <button id="pro-checkout-btn" onclick="startProCheckout()" style="background:#e94560;color:#fff;border:none;padding:0.7rem 1.5rem;border-radius:7px;font-weight:700;font-size:0.92rem;cursor:pointer;white-space:nowrap;flex-shrink:0">Upgrade to Pro $29/mo →</button>
+  </div>
+</div>
+
+<!-- ?pro=true success banner -->
+<div id="pro-success-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#065f46;color:#d1fae5;text-align:center;padding:14px 20px;font-size:0.95rem;font-weight:600;transition:opacity 0.6s;">
+  🎉 You're now a CrawlGuard Pro member — thank you! Check your email for the receipt.
+</div>
+
+<!-- Pro coming soon modal -->
+<div id="pro-soon-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#111;border:1px solid #333;border-radius:12px;padding:2rem;max-width:400px;width:90%;text-align:center;">
+    <div style="font-size:1.5rem;margin-bottom:0.75rem">🚀</div>
+    <h3 style="color:#f9fafb;margin-bottom:0.5rem">CrawlGuard Pro — coming very soon</h3>
+    <p style="color:#9ca3af;font-size:0.9rem;margin-bottom:1.25rem">Join the waitlist to get notified and lock in early pricing.</p>
+    <a href="https://lior-seats.github.io/crawlguard-waitlist/" style="display:inline-block;background:#e94560;color:#fff;padding:0.65rem 1.5rem;border-radius:7px;font-weight:700;text-decoration:none;font-size:0.95rem">Join waitlist →</a>
+    <br><button onclick="document.getElementById('pro-soon-modal').style.display='none'" style="margin-top:1rem;background:none;border:none;color:#6b7280;cursor:pointer;font-size:0.85rem">Close</button>
+  </div>
+</div>
+
 </body>
 </html>
