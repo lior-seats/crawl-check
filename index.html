@@ -140,6 +140,9 @@
       <button class="share-btn tweet" onclick="shareOnX()">&#x1D54F; Share on X</button>
       <button class="share-btn copy" id="copy-btn" onclick="copyResults()">&#x1F4CB; Copy summary</button>
     </div>
+    <div id="gen-link" style="display:none;margin-top:14px;text-align:center">
+      <a href="https://lior-seats.github.io/crawl-check/robots-generator.html" style="display:inline-block;background:#1a1a2e;border:1px solid rgba(233,69,96,0.35);color:#e94560;border-radius:9px;padding:10px 20px;font-size:0.88rem;font-weight:700;text-decoration:none;">🛡️ Generate robots.txt rules to block these bots &rarr;</a>
+    </div>
   </div>
 </div>
 
@@ -309,6 +312,7 @@ function renderResults(robotsTxt, domain, isDemo) {
     ${summary}${rows}${cta}`;
   document.getElementById('results').style.display = 'block';
   document.getElementById('share-section').style.display = 'flex';
+  document.getElementById('gen-link').style.display = 'block';
   document.getElementById('pro-upgrade-card').style.display = 'block';
 }
 

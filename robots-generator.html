@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Crawler robots.txt Generator — Block GPTBot, ClaudeBot, and More</title>
+  <meta name="description" content="Generate robots.txt rules to block major AI crawlers. Select which bots to block, copy the result, paste into your robots.txt. Free, instant, no signup." />
+  <meta property="og:title" content="AI Crawler robots.txt Generator — Block GPTBot, ClaudeBot, and More" />
+  <meta property="og:description" content="Generate robots.txt rules to block AI crawlers in seconds. Select bots, copy result, paste into your site." />
+  <meta property="og:url" content="https://lior-seats.github.io/crawl-check/robots-generator.html" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="canonical" href="https://lior-seats.github.io/crawl-check/robots-generator.html" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 56px 24px 44px; text-align: center; }
+    .badge { display: inline-block; background: rgba(233,69,96,0.15); border: 1px solid rgba(233,69,96,0.4); color: #e94560; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 18px; }
+    .hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 800; margin-bottom: 14px; line-height: 1.25; }
+    .hero h1 span { color: #e94560; }
+    .hero p { font-size: 1.05rem; color: #aab; max-width: 520px; margin: 0 auto 12px; line-height: 1.6; }
+    .back-link { font-size: 0.82rem; color: #666; margin-top: 10px; }
+    .back-link a { color: #e94560; text-decoration: none; }
+
+    /* Main card */
+    .main { max-width: 680px; margin: 32px auto; padding: 0 24px; }
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+
+    /* Bot list */
+    .section-label { font-size: 0.78rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+    .bot-group { margin-bottom: 20px; }
+    .bot-group-title { font-size: 0.82rem; font-weight: 700; color: #e94560; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #2a2a2a; }
+    .bot-list { display: flex; flex-direction: column; gap: 8px; }
+    .bot-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; background: #111; border: 1px solid #2a2a2a; cursor: pointer; transition: border-color 0.15s; }
+    .bot-item:hover { border-color: #444; }
+    .bot-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #e94560; cursor: pointer; flex-shrink: 0; }
+    .bot-info { flex: 1; }
+    .bot-name { font-size: 0.9rem; font-weight: 600; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .bot-company { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    .bot-tag { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(239,68,68,0.15); color: #ef4444; letter-spacing: 0.04em; flex-shrink: 0; }
+    .bot-tag.safe { background: rgba(16,185,129,0.15); color: #10b981; }
+
+    /* Options */
+    .options-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .opt-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #333; background: #111; color: #aab; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+    .opt-btn:hover { border-color: #e94560; color: #e94560; }
+
+    /* Disallow path */
+    .path-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+    .path-label { font-size: 0.82rem; color: #888; white-space: nowrap; }
+    .path-input { flex: 1; background: #111; border: 1px solid #2a2a2a; border-radius: 8px; color: #e8e8e8; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.88rem; padding: 8px 12px; outline: none; }
+    .path-input:focus { border-color: #e94560; }
+
+    /* Output */
+    .output-label { font-size: 0.78rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .output-label .copy-hint { font-size: 0.72rem; color: #555; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    #output { width: 100%; min-height: 220px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 10px; color: #9ae6b4; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; padding: 16px; resize: vertical; outline: none; line-height: 1.8; }
+    #output:focus { border-color: #333; }
+
+    /* Buttons */
+    .action-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .copy-btn { flex: 1; min-width: 140px; padding: 12px 18px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s; background: #e94560; color: #fff; }
+    .copy-btn:hover { background: #c73650; }
+    .copy-btn.ok { background: #10b981; }
+    .download-btn { flex: 1; min-width: 140px; padding: 12px 18px; border: 1px solid #333; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; background: #111; color: #e8e8e8; transition: all 0.2s; }
+    .download-btn:hover { background: #1a1a1a; border-color: #555; }
+
+    /* CTAs */
+    .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+    @media (max-width: 540px) { .cta-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 1.5rem; } }
+    .cta-item { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 18px; }
+    .cta-item h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: #e8e8e8; }
+    .cta-item p { font-size: 0.8rem; color: #888; margin-bottom: 12px; line-height: 1.5; }
+    .cta-link { display: inline-block; background: #e94560; color: #fff; padding: 8px 16px; border-radius: 7px; font-size: 0.82rem; font-weight: 700; text-decoration: none; }
+    .cta-link:hover { background: #c73650; }
+    .cta-link.secondary { background: transparent; border: 1px solid #e94560; color: #e94560; }
+    .cta-link.secondary:hover { background: rgba(233,69,96,0.1); }
+
+    footer { text-align: center; padding: 32px 24px; color: #444; font-size: 0.78rem; }
+    footer a { color: #e94560; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">FREE TOOL</div>
+  <h1>AI Crawler <span>robots.txt</span> Generator</h1>
+  <p>Select which AI bots to block, copy the generated rules, paste into your <code style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:4px;font-size:0.9em">robots.txt</code>.</p>
+  <div class="back-link"><a href="https://lior-seats.github.io/crawl-check/">← Check if your site is blocking AI crawlers</a></div>
+</div>
+
+<div class="main">
+
+  <!-- Bot selector + output -->
+  <div class="card">
+    <div class="section-label">Choose bots to block</div>
+
+    <!-- Quick presets -->
+    <div class="options-row">
+      <button class="opt-btn" onclick="setPreset('aggressive')">Block all AI crawlers</button>
+      <button class="opt-btn" onclick="setPreset('top4')">Block top 4 only</button>
+      <button class="opt-btn" onclick="setPreset('none')">Clear all</button>
+    </div>
+
+    <!-- AI crawlers (the main ones) -->
+    <div class="bot-group">
+      <div class="bot-group-title">🤖 AI Training Crawlers</div>
+      <div class="bot-list" id="bot-list">
+        <label class="bot-item">
+          <input type="checkbox" value="GPTBot" data-company="OpenAI" checked onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">GPTBot</div><div class="bot-company">OpenAI</div></div>
+          <span class="bot-tag">HIGH VOLUME</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="ClaudeBot" data-company="Anthropic" checked onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">ClaudeBot</div><div class="bot-company">Anthropic</div></div>
+          <span class="bot-tag">HIGH VOLUME</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="anthropic-ai" data-company="Anthropic" checked onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">anthropic-ai</div><div class="bot-company">Anthropic</div></div>
+          <span class="bot-tag">HIGH VOLUME</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="meta-externalagent" data-company="Meta" checked onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">meta-externalagent</div><div class="bot-company">Meta (LLaMA training)</div></div>
+          <span class="bot-tag">HIGH VOLUME</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="Bytespider" data-company="ByteDance / TikTok" checked onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">Bytespider</div><div class="bot-company">ByteDance / TikTok</div></div>
+          <span class="bot-tag">HIGH VOLUME</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="PerplexityBot" data-company="Perplexity" onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">PerplexityBot</div><div class="bot-company">Perplexity AI</div></div>
+          <span class="bot-tag">MODERATE</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="ChatGPT-User" data-company="OpenAI" onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">ChatGPT-User</div><div class="bot-company">OpenAI (browsing)</div></div>
+          <span class="bot-tag">MODERATE</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="CCBot" data-company="Common Crawl" onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">CCBot</div><div class="bot-company">Common Crawl (feeds many LLMs)</div></div>
+          <span class="bot-tag">MODERATE</span>
+        </label>
+        <label class="bot-item">
+          <input type="checkbox" value="Google-Extended" data-company="Google" onchange="updateOutput()">
+          <div class="bot-info"><div class="bot-name">Google-Extended</div><div class="bot-company">Google (Bard/Gemini training — separate from search)</div></div>
+          <span class="bot-tag safe">SEARCH SAFE</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Disallow path -->
+    <div class="path-row">
+      <span class="path-label">Disallow path:</span>
+      <input type="text" class="path-input" id="disallow-path" value="/" onchange="updateOutput()" oninput="updateOutput()" placeholder="/ (entire site)">
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="card">
+    <div class="output-label">
+      Generated robots.txt
+      <span class="copy-hint">Append this to your existing robots.txt file</span>
+    </div>
+    <textarea id="output" readonly spellcheck="false"></textarea>
+    <div class="action-row">
+      <button class="copy-btn" id="copy-btn" onclick="copyOutput()">📋 Copy to clipboard</button>
+      <button class="download-btn" onclick="downloadOutput()">⬇️ Download robots.txt</button>
+    </div>
+  </div>
+
+  <!-- CTAs -->
+  <div class="cta-grid">
+    <div class="cta-item">
+      <h3>✅ Verify it's working</h3>
+      <p>After updating your robots.txt, confirm these bots are actually blocked on your live site.</p>
+      <a class="cta-link" href="https://lior-seats.github.io/crawl-check/">Check your site now →</a>
+    </div>
+    <div class="cta-item">
+      <h3>📊 Monitor AI crawler traffic</h3>
+      <p>See which AI bots are actually visiting, how often, and the estimated bandwidth cost.</p>
+      <a class="cta-link secondary" href="https://lior-seats.github.io/crawlguard-waitlist/">Get CrawlGuard →</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <a href="https://lior-seats.github.io/crawl-check/">crawl-check</a> ·
+  <a href="https://lior-seats.github.io/crawlguard-waitlist/">CrawlGuard</a> ·
+  Built by <a href="https://lior-seats.github.io/">lior-seats</a>
+</footer>
+
+<script>
+const BOTS_ORDER = [
+  'GPTBot','ClaudeBot','anthropic-ai','meta-externalagent',
+  'Bytespider','PerplexityBot','ChatGPT-User','CCBot','Google-Extended'
+];
+
+function getChecked() {
+  return [...document.querySelectorAll('#bot-list input[type=checkbox]')]
+    .filter(cb => cb.checked)
+    .map(cb => ({ name: cb.value, company: cb.dataset.company }));
+}
+
+function updateOutput() {
+  const checked = getChecked();
+  const path = (document.getElementById('disallow-path').value || '/').trim() || '/';
+  const date = new Date().toISOString().slice(0, 10);
+
+  if (checked.length === 0) {
+    document.getElementById('output').value = '# No bots selected. Check the boxes above to generate your robots.txt rules.';
+    return;
+  }
+
+  const lines = [];
+  lines.push(`# AI Crawler Blocking Rules`);
+  lines.push(`# Generated by https://lior-seats.github.io/crawl-check/robots-generator.html`);
+  lines.push(`# Date: ${date}`);
+  lines.push(`# Add these rules to your existing robots.txt file`);
+  lines.push('');
+
+  for (const bot of checked) {
+    lines.push(`User-agent: ${bot.name}`);
+    lines.push(`Disallow: ${path}`);
+    lines.push('');
+  }
+
+  document.getElementById('output').value = lines.join('\n').trimEnd() + '\n';
+}
+
+function copyOutput() {
+  const text = document.getElementById('output').value;
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('ok');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.classList.remove('ok'); btn.textContent = '📋 Copy to clipboard'; }, 1800);
+  }).catch(() => {
+    const ta = document.getElementById('output');
+    ta.select();
+    document.execCommand('copy');
+    btn.classList.add('ok');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.classList.remove('ok'); btn.textContent = '📋 Copy to clipboard'; }, 1800);
+  });
+}
+
+function downloadOutput() {
+  const text = document.getElementById('output').value;
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = 'robots.txt';
+  a.click();
+}
+
+function setPreset(preset) {
+  const boxes = [...document.querySelectorAll('#bot-list input[type=checkbox]')];
+  const aggressive = ['GPTBot','ClaudeBot','anthropic-ai','meta-externalagent','Bytespider','PerplexityBot','ChatGPT-User','CCBot','Google-Extended'];
+  const top4 = ['GPTBot','ClaudeBot','anthropic-ai','meta-externalagent'];
+
+  boxes.forEach(cb => {
+    if (preset === 'aggressive') cb.checked = aggressive.includes(cb.value);
+    else if (preset === 'top4') cb.checked = top4.includes(cb.value);
+    else cb.checked = false;
+  });
+  updateOutput();
+}
+
+// Initialize
+updateOutput();
+</script>
+<script>(function(){try{fetch('https://agent-control-plane-w3m9.onrender.com/api/hit?page=robots-generator',{mode:'no-cors'}).catch(function(){});}catch(e){}})();</script>
+</body>
+</html>
